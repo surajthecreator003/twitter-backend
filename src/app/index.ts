@@ -2,6 +2,7 @@ import { ApolloServer } from "@apollo/server";
 import express from "express";
 import {expressMiddleware} from "@apollo/server/express4";
 import bodyParser from "body-parser";
+import { prismaClient } from "../clients/db";
 
 //the graphql server and the normal express server
 export async function initServer(){
@@ -10,6 +11,9 @@ export async function initServer(){
 
    app.use(bodyParser.json());//json to normal js 
 
+
+   //directly use the prisma client
+   //prismaClient.user.findMany().then((users)=>{
 
     //creating the graphql Server
     //typeDefs is like the Schema resolvers contains the Query and Mutation
@@ -31,7 +35,7 @@ export async function initServer(){
                   }
     }
     )
-    
+
 
 
     await graphqlServer.start();//start the graphql server

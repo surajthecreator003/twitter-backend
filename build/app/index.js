@@ -22,6 +22,8 @@ function initServer() {
     return __awaiter(this, void 0, void 0, function* () {
         const app = (0, express_1.default)(); //create the express server
         app.use(body_parser_1.default.json()); //json to normal js 
+        //directly use the prisma client
+        //prismaClient.user.findMany().then((users)=>{
         //creating the graphql Server
         //typeDefs is like the Schema resolvers contains the Query and Mutation
         //Query is for fetching some data from server
