@@ -17,6 +17,7 @@ const server_1 = require("@apollo/server");
 const express_1 = __importDefault(require("express"));
 const express4_1 = require("@apollo/server/express4");
 const body_parser_1 = __importDefault(require("body-parser"));
+const user_1 = require("./user");
 //the graphql server and the normal express server
 function initServer() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -30,15 +31,16 @@ function initServer() {
         //while resolvers is for changing data on server 
         const graphqlServer = new server_1.ApolloServer({
             typeDefs: `
+
+          ${user_1.User.types}
+
            type Query{
-                sayHello:String
+                ${user_1.User.queries}
            },
           
         `,
             resolvers: {
-                Query: {
-                    sayHello: () => `Hello From GraphQl Server`
-                },
+                Query: Object.assign({}, user_1.User.resolvers.queries),
             }
         });
         yield graphqlServer.start(); //start the graphql server
