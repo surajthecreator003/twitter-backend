@@ -8,12 +8,44 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolvers = void 0;
-//the actiual resolver to be used while queriying
+const axios_1 = __importDefault(require("axios"));
+const db_1 = require("../../clients/db");
+const jwt_1 = __importDefault(require("../../services/jwt"));
+//this resolver willl take the google OAuth token and verify it and then return our own jwt token with only email and id as the payload
 const queries = {
     verifyGoogleToken: (parent, { token }) => __awaiter(void 0, void 0, void 0, function* () {
-        return token;
+        //remember the GOOGLE OAUTH TOKEN is short lived so can cause errors during testing
+        const googleToken = token; //this token is the jwt token that we wll get after logging in the site
+        const googleOauthURL = new URL("https://oauth2.googleapis.com/tokeninfo");
+        //console.log(googleOauthURL)
+        googleOauthURL.searchParams.append("id_token", googleToken); ///adding the jwt token to the search param
+        //this data wil contain all the data of the user
+        const { data } = yield axios_1.default.get(googleOauthURL.toString(), { responseType: "json" }); //making the request to google oauth server
+        //console.log(data)
+        //check if user is present already in database or not
+        const user = yield db_1.prismaClient.user.findUnique({ where: { email: data.email } });
+        //if user is not present in database then create one
+        if (!user) {
+            yield db_1.prismaClient.user.create({
+                data: {
+                    email: data.email,
+                    firstName: data.given_name || '', // Provide a default value if data.given_name is undefined
+                    lastName: data.family_name,
+                    profileImageURL: data.picture,
+                },
+            });
+        }
+        const userInDb = yield db_1.prismaClient.user.findUnique({ where: { email: data.email } });
+        if (!userInDb) {
+            throw new Error("User with email not found");
+        }
+        const userToken = yield jwt_1.default.generateTokenForUser(userInDb);
+        return userToken;
     })
 };
 exports.resolvers = { queries };
