@@ -3,7 +3,7 @@ import { prismaClient } from '../../clients/db';
 import JWTService from '../../services/jwt';
 
 
-
+//type for google OAuth token
 interface GoogleTokenResult{
     iss?: string;
   azp?: string;
@@ -31,7 +31,7 @@ const queries={
     verifyGoogleToken:async(parent:any,{token}:{token:string})=>{
 
         //remember the GOOGLE OAUTH TOKEN is short lived so can cause errors during testing
-        const googleToken=token;//this token is the jwt token that we wll get after logging in the site
+        const googleToken=token;//this token is the Google OAuth jwt token that we will get after logging in the site
 
         const googleOauthURL=new URL("https://oauth2.googleapis.com/tokeninfo");
         //console.log(googleOauthURL)
@@ -39,7 +39,7 @@ const queries={
         googleOauthURL.searchParams.append("id_token",googleToken);///adding the jwt token to the search param
 
 
-        //this data wil contain all the data of the user
+        //this data will contain all the data of the user
         const {data} = await axios.get<GoogleTokenResult>(googleOauthURL.toString()
         ,{responseType:"json"});//making the request to google oauth server
         //console.log(data)

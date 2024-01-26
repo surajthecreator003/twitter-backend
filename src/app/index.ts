@@ -2,7 +2,8 @@ import { ApolloServer } from "@apollo/server";
 import express from "express";
 import {expressMiddleware} from "@apollo/server/express4";
 import bodyParser from "body-parser";
-import { prismaClient } from "../clients/db";
+//import { prismaClient } from "../clients/db";
+import cors from "cors";
 
 import { User } from "./user";
 
@@ -12,7 +13,7 @@ export async function initServer(){
 
 
    app.use(bodyParser.json());//json to normal js 
-
+   app.use(cors())
 
    //directly use the prisma client
    //prismaClient.user.findMany().then((users)=>{
