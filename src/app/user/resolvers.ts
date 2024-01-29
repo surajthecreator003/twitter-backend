@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { prismaClient } from '../../clients/db';
 import JWTService from '../../services/jwt';
+import { GraphqlContext } from '../../interfaces';
 
 
 //type for google OAuth token
@@ -26,8 +27,10 @@ interface GoogleTokenResult{
 }
 
 
-//this resolver willl take the google OAuth token and verify it and then return our own jwt token with only email and id as the payload
+
 const queries={
+    
+    //verifyGoogletoken Query will take google OAuth token and verify it and then return our own jwt token with only email and id as the payload
     verifyGoogleToken:async(parent:any,{token}:{token:string})=>{
 
         //remember the GOOGLE OAUTH TOKEN is short lived so can cause errors during testing
@@ -66,8 +69,28 @@ const queries={
         if(!userInDb){throw new Error("User with email not found")}
 
         const userToken=await JWTService.generateTokenForUser(userInDb);
+        console.log("userToken generated from fetching user details from supabase =",userToken);
         return userToken;
-    }
+    },
+
+    
+    //getCurrentUser Returns the current user details and will also create the user if not present in the database
+    //this assumes we have already decoded the JWT token and provided it in the Context of the Graphql Server
+    getCurrentUser:async(parent:any,args:any,ctx:GraphqlContext)=>{
+        console.log("ctx or GraphQl Context =",ctx);
+        console.log("user insdie ctx =",ctx.user);
+
+        const id=ctx.user?.id;
+        if(!id) return null;
+
+
+        //find the user in the database
+        const user=await prismaClient.user.findUnique({where:{id}});
+
+    return user
+    }//solved the error alwayu=s add Bearer before the token in the Authorization header
+
+
 
 }
 

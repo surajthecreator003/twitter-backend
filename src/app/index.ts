@@ -2,27 +2,29 @@ import { ApolloServer } from "@apollo/server";
 import express from "express";
 import {expressMiddleware} from "@apollo/server/express4";
 import bodyParser from "body-parser";
-//import { prismaClient } from "../clients/db";
+
 import cors from "cors";
 
 import { User } from "./user";
+import { GraphqlContext } from "../interfaces";
+import JWTService from "../services/jwt";
 
 //the graphql server and the normal express server
 export async function initServer(){
     const app=express();//create the express server
 
-
-   app.use(bodyParser.json());//json to normal js 
    app.use(cors())
+   app.use(bodyParser.json());//json to normal js 
+   
 
    //directly use the prisma client
    //prismaClient.user.findMany().then((users)=>{
 
-    //creating the graphql Server
+    //Graphql Server
     //typeDefs is like the Schema resolvers contains the Query and Mutation
     //Query is for fetching some data from server
     //while resolvers is for changing data on server 
-    const graphqlServer= new ApolloServer<any>(
+    const graphqlServer= new ApolloServer<GraphqlContext>(
         {
         typeDefs:`
 
@@ -38,7 +40,8 @@ export async function initServer(){
                         ...User.resolvers.queries
                    },
                    
-                  }
+                  },
+        
     }
     )
 
@@ -46,7 +49,17 @@ export async function initServer(){
 
     await graphqlServer.start();//start the graphql server
 
-    app.use("/graphql",expressMiddleware(graphqlServer))//pass on the graphql server to express server
+    //context in graphql is like the metadata for the whole graphql server that gets passed on from the express server to the Graphql Server
+    //currently providing the jwt token as context to the graphql server
+    app.use("/graphql",expressMiddleware(graphqlServer,{context:async({req,res})=>{
+
+
+            return {//will return the user details decoding from the jwt token
+               user:req.headers.authorization?JWTService.decodeToken(req.headers.authorization.split("Bearer ")[1])
+               :
+               undefined
+            }
+    }}))//pass on the graphql server to express server
 
     return app;
 
