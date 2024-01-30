@@ -20,4 +20,21 @@ model User{
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  tweets Tweet[]//this is the relation and not a row so dont expect it to be inside the mogration.sql
+}
+
+
+model Tweet{
+  id String @id @default(cuid())
+  content String
+  imageURL String?
+
+
+//many tweets can belong to one user
+  author User @relation(fields: [authorId], references: [id])//this defines the realtionship between the Tweet and the User
+  authorId String//a tweet can only have one User/author
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

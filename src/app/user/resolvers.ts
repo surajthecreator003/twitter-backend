@@ -88,10 +88,18 @@ const queries={
         const user=await prismaClient.user.findUnique({where:{id}});
 
     return user
-    }//solved the error alwayu=s add Bearer before the token in the Authorization header
-
-
+    }//solved the error always add Bearer before the token in the Authorization header
 
 }
 
-export const resolvers={queries}
+
+const  extraResolvers={
+    User:{
+        tweets:async(parent:any)=>{
+            const tweets=await prismaClient.tweet.findMany({where:{author:{id:parent.id}}});
+            return tweets;
+        }
+    }
+}
+
+export const resolvers={queries,extraResolvers}
