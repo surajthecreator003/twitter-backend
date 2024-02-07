@@ -27,7 +27,7 @@ interface GoogleTokenResult{
 }
 
 
-
+//is a big Object with query name as keys and the callback function/resolver as the value
 const queries={
     
     //verifyGoogletoken Query will take google OAuth token and verify it and then return our own jwt token with only email and id as the payload
@@ -87,8 +87,16 @@ const queries={
         //find the user in the database
         const user=await prismaClient.user.findUnique({where:{id}});
 
-    return user
-    }//solved the error always add Bearer before the token in the Authorization header
+        return user
+    },//solved the error always add Bearer before the token in the Authorization header
+
+
+    //to get a user by id (to be used when you click on a profile of a user)
+    getUserById:async(parent:any,{id}:{id:string},ctx:GraphqlContext)=>{
+        const userById=await prismaClient.user.findUnique({where:{id}});
+        console.log("userById =",userById);
+        return userById;
+    }//change the id type to string if it creates issue
 
 }
 
