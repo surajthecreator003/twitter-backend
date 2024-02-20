@@ -8,6 +8,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 
 
+
 interface CreateTweetPayload {
   content: string;
   imageURL?: string;
@@ -43,10 +44,8 @@ const queries = {
     if (!allowedImageTypes.includes(imageType))
       throw new Error("Image type not allowed");
 
-
-
     const putObjectCommand = new PutObjectCommand({//we are first creating the folder needed to store the images
-      Bucket: "suraj-twitter-bucket",
+      Bucket: process.env.AWS__S3__BUCKET,
       Key: `uploads/${
         ctx.user.id
       }/tweets/${imageName}-${Date.now()}.${imageType}`, ///${imageName}-${Date.now()}.${imageType} will help not overide if there are any previous pics of smae id
