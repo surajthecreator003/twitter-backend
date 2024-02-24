@@ -1,5 +1,6 @@
 // import axios from "axios";
 // import { User } from ".";
+import { User } from "@prisma/client";
 import { prismaClient } from "../../clients/db";
 // import JWTService from "../../services/jwt";
 import { GraphqlContext } from "../../interfaces";
@@ -7,7 +8,6 @@ import UserService from "../../services/user";
 
 //queries is a big Object with query name as keys and the callback function/resolver as the value
 const queries = {
-
   //verifyGoogletoken Query will take google OAuth token and verify it and then return our own jwt token with only email and id as the payload
   verifyGoogleToken: async (parent: any, { token }: { token: string }) => {
     const resultToken = await UserService.verifyGoogleAuthToken(token);
@@ -40,18 +40,60 @@ const queries = {
     console.log("userById =", userById);
     return userById;
   }, //change the id type to string if it creates issue
-  
 };
 
 const extraResolvers = {
   User: {
-    tweets: async (parent: any) => {
+    tweets: async (parent: User) => {
       const tweets = await prismaClient.tweet.findMany({
         where: { author: { id: parent.id } },
       });
       return tweets;
     },
+
+    follower: async (parent: User) => {
+      //will return followers where following Id is same as the parent id
+      const followers = await prismaClient.follows.findMany({
+        where: { following: { id: parent.id } },
+        include: { follower: true },
+      });
+      return followers.map((f) => f.follower);
+    },
+
+    following: async (parent: User) => {
+      //will return followers
+      const followings = await prismaClient.follows.findMany({
+        where: { follower: { id: parent.id } },
+        include: { follower: true, following: true },
+      });
+      return followings.map((f) => f.following);
+    },
   },
 };
 
-export const resolvers = { queries, extraResolvers };
+//follow and unfollow User Mutation
+const mutations = {
+  followUser: async (
+    parent: any,
+    { to }: { to: string },
+    ctx: GraphqlContext
+  ) => {
+    if (!ctx.user || !ctx.user.id) throw new Error("User not authenticated");
+
+    const result = await UserService.followUser(ctx.user.id, to);
+    return true;
+  },
+
+  unfollowUser: async (
+    parent: any,
+    { to }: { to: string },
+    ctx: GraphqlContext
+  ) => {
+    if (!ctx.user || !ctx.user.id) throw new Error("User not authenticated");
+
+    const result = await UserService.unfollowUser(ctx.user.id, to);
+    return true;
+  },
+};
+
+export const resolvers = { queries, extraResolvers, mutations };

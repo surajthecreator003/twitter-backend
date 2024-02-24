@@ -25,7 +25,6 @@ interface GoogleTokenResult {
 }
 
 class UserService {
-
   public static async verifyGoogleAuthToken(token: string) {
     //remember the GOOGLE OAUTH TOKEN is short lived so can cause errors during testing
     const googleToken = token; //this token is the Google OAuth jwt token that we will get after logging in the site
@@ -75,11 +74,35 @@ class UserService {
     return userToken;
   }
 
-
   public static async getUserById(id: string) {
     return prismaClient.user.findUnique({ where: { id } });
   }
-  
+
+
+  //should add async to the function rather than adding async and await in the calling function
+  //follow a User
+  public static followUser(from: string, to: string) {
+    //from is the follower and to is the following
+    return prismaClient.follows.create({
+      data: {
+        follower: { connect: { id: from } },
+        following: { connect: { id: to } },
+      },
+    });
+  }
+
+
+  //unfollow a User
+  public static unfollowUser(from: string, to: string) {
+    return prismaClient.follows.delete({
+      where: {
+        followerId_followingId: {
+          followerId: from,
+          followingId: to,
+        },
+      },
+    });
+  }
 }
 
 export default UserService;

@@ -9,6 +9,9 @@ export const types=` #graphql
    email:String!
    profileImageURL:String!
 
+   follower:[User]
+   following:[User]
+
    tweets:[Tweet]
 
  }
