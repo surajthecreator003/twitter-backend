@@ -10,31 +10,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-model User{
-  id  String @id @default(cuid())
-  firstName String
-  lastName String?
-  email String @unique
+model User {
+  id              String  @id @default(cuid())
+  firstName       String
+  lastName        String?
+  email           String  @unique
   profileImageURL String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tweets Tweet[]//this is the relation and not a row so dont expect it to be inside the mogration.sql
+  followers Follows[] @relation("follower")
+  following Follows[] @relation("following")
+
+  tweets Tweet[] //this is the relation and not a row so dont expect it to be inside the mogration.sql
 }
 
-
-model Tweet{
-  id String @id @default(cuid())
-  content String
+model Tweet {
+  id       String  @id @default(cuid())
+  content  String
   imageURL String?
 
-
-//many tweets can belong to one user
-  author User @relation(fields: [authorId], references: [id])//this defines the realtionship between the Tweet and the User
-  authorId String//a tweet can only have one User/author
+  //many tweets can belong to one user
+  author   User   @relation(fields: [authorId], references: [id]) //this defines the realtionship between the Tweet and the User
+  authorId String //a tweet can only have one User/author
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Follows {
+  follower   User   @relation("follower", fields: [followerId], references: [id])
+  followerId String
+
+  following   User   @relation("following", fields: [followingId], references: [id])
+  followingId String
+
+  @@id([followerId, followingId])
 }
